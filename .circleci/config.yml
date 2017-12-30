@@ -6,5 +6,22 @@ jobs:
       - image: circleci/node:7.10
     steps:
       - checkout
+      - restore_cache:
+          name: Restore node_modules cache
+          keys:
+            - v1-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}
+            - v1-node-{{ arch }}-{{ .Branch }}-
+            - v1-node-{{ arch }}-
       - run: yarn install
       - run: yarn test
+      - run:
+        name: Calculate code coverage if on master
+        command: |
+          if [ "$CIRCLE_BRANCH" == "master" ]; then
+            yarn coverage
+          fi
+      - save_cache:
+          name: Save node_modules cache
+          key: v1-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}
+          paths:
+            - node_modules
